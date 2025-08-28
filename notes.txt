@@ -1,0 +1,3 @@
+/api - area publica
+/api/admin - area privada
+/api/auth - area de autenticação
