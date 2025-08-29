@@ -27,3 +27,18 @@ export const createUser = async ({
     data: { name, email, password: newPassword },
   });
 };
+
+type verifyUserProps = {
+  email: string;
+  password: string;
+};
+
+export const verifyUser = async ({ email, password }: verifyUserProps) => {
+  const user = await prisma.user.findFirst({ where: { email } });
+
+  if (!user) return false;
+  //aqui e pra voce comparar o valor recebido com a senha que ta no banco
+  if (!bcrypt.compareSync(password, user.password)) return false;
+
+  return user;
+};

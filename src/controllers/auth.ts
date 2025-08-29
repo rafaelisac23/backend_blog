@@ -1,7 +1,8 @@
-import { error } from "console";
 import { RequestHandler } from "express";
-import z, { email } from "zod";
-import { createUser } from "../services/user";
+import z from "zod";
+import { createUser, verifyUser } from "../services/user";
+import { createToken } from "../services/auth";
+import { error } from "console";
 
 export const SignUp: RequestHandler = async (req, res) => {
   //schema para validação
@@ -25,7 +26,7 @@ export const SignUp: RequestHandler = async (req, res) => {
     return;
   }
 
-  const token = "123"; //TODO: Criar token de acesso
+  const token = createToken(newUser);
 
   res.status(201).json({
     user: {
@@ -37,6 +38,37 @@ export const SignUp: RequestHandler = async (req, res) => {
   });
 };
 
-export const SignIn: RequestHandler = (req, res) => {};
+export const SignIn: RequestHandler = async (req, res) => {
+  const schema = z.object({
+    email: z.string().email(),
+    password: z.string(),
+  });
+
+  const data = schema.safeParse(req.body);
+
+  // trata o erro do zod
+  if (!data.success) {
+    res.status(400).json({ error: data.error.flatten().fieldErrors });
+    return;
+  }
+
+  const user = await verifyUser(data.data);
+
+  if (!user) {
+    res.status(401).json({ error: "Acesso negado" });
+    return;
+  }
+
+  const token = createToken(user);
+
+  res.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    },
+    token,
+  });
+};
 
 export const Validate: RequestHandler = (req, res) => {};
