@@ -1,7 +1,8 @@
 import { Router } from "express";
 import * as AuthController from "../controllers/auth";
+import { privateRoute } from "../middlewares/private-route";
 export const authRoutes = Router();
 
 authRoutes.post("/signup", AuthController.SignUp);
 authRoutes.post("/signin", AuthController.SignIn);
-// authRoutes.post("/validate", AuthController.Validate);
+authRoutes.post("/validate", privateRoute, AuthController.Validate);

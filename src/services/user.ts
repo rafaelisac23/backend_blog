@@ -42,3 +42,10 @@ export const verifyUser = async ({ email, password }: verifyUserProps) => {
 
   return user;
 };
+
+export const getUserById = (id: number) => {
+  return prisma.user.findUnique({
+    where: { id },
+    select: { id: true, name: true, status: true, email: true },
+  });
+};
