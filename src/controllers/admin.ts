@@ -1,7 +1,13 @@
 import { Response } from "express";
 import { ExtendedRequest } from "../types/extended-request";
 import z from "zod";
-import { createPost, createPostSlug, handleCover } from "../services/post";
+import {
+  createPost,
+  createPostSlug,
+  getPostByslug,
+  handleCover,
+  updatePost,
+} from "../services/post";
 import { getUserById } from "../services/user";
 import { coverToUrl } from "../utils/CoverToUrl";
 
@@ -69,6 +75,62 @@ export const addPost = async (req: ExtendedRequest, res: Response) => {
 
 // export const getPost = async (req, res) => {};
 
-// export const editPost = async (req, res) => {};
+export const editPost = async (req: ExtendedRequest, res: Response) => {
+  const { slug } = req.params;
+
+  const schema = z.object({
+    status: z.enum(["PUBLISHED", "DRAFT"]).optional(),
+    title: z.string().optional(),
+    tags: z.string().optional(),
+    body: z.string().optional(),
+  });
+
+  const data = schema.safeParse(req.body);
+
+  if (!data.success) {
+    res.json({ error: data.error.flatten().fieldErrors });
+    return;
+  }
+
+  const post = await getPostByslug(slug);
+
+  console.log(post);
+
+  if (!post) {
+    res.json({ Error: "Post Inexistente" });
+    return;
+  }
+
+  let coverName: string | false = false;
+
+  if (req.file) {
+    coverName = await handleCover(req.file);
+  }
+
+  const updatedPost = await updatePost(slug, {
+    updatedAt: new Date(),
+    status: data.data.status ?? undefined,
+    title: data.data.title ?? undefined,
+    tags: data.data.tags ?? undefined,
+    body: data.data.body ?? undefined,
+    cover: coverName ? coverName : undefined,
+  });
+
+  const author = await getUserById(updatedPost.authorId);
+
+  res.json({
+    post: {
+      id: updatedPost.id,
+      status: updatedPost.status,
+      slug: updatedPost.slug,
+      title: updatedPost.title,
+      tags: updatedPost.tags,
+      body: updatedPost.body,
+      createdAt: updatedPost.createdAt,
+      cover: coverToUrl(updatedPost.cover),
+      author: author?.name,
+    },
+  });
+};
 
 // export const removePost = async (req, res) => {};
