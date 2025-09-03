@@ -4,6 +4,29 @@ import { v4 } from "uuid";
 import { prisma } from "../libs/prisma";
 import { Prisma } from "../generated/prisma";
 
+export const getAllPosts = async (page: number) => {
+  let perPage = 5;
+  if (page <= 0) return [];
+
+  const posts = await prisma.post.findMany({
+    include: {
+      author: {
+        select: {
+          name: true,
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: perPage,
+    skip: (page - 1) * 5,
+  });
+
+  return posts;
+};
+
 export const getPostByslug = async (slug: string) => {
   return await prisma.post.findUnique({
     where: { slug },
@@ -71,4 +94,10 @@ export const updatePost = async (
   data: Prisma.PostUpdateInput
 ) => {
   return await prisma.post.update({ where: { slug }, data });
+};
+
+export const deletePost = async (slug: string) => {
+  return await prisma.post.delete({
+    where: { slug },
+  });
 };
