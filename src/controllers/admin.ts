@@ -15,6 +15,28 @@ import { coverToUrl } from "../utils/CoverToUrl";
 import { error } from "console";
 import { title } from "process";
 
+export const getPost = async (req: ExtendedRequest, res: Response) => {
+  const { slug } = req.params;
+
+  const post = await getPostByslug(slug);
+  if (!post) {
+    res.json({ error: "Post Inexistente" });
+    return;
+  }
+  res.json({
+    post: {
+      id: post.id,
+      title: post.title,
+      createdAt: post.createdAt,
+      cover: coverToUrl(post.cover),
+      authorName: post.author?.name,
+      tags: post.tags,
+      body: post.body,
+      slug: post.slug,
+    },
+  });
+};
+
 export const getPosts = async (req: ExtendedRequest, res: Response) => {
   let page = 1;
   if (req.query.page) {
@@ -100,8 +122,6 @@ export const addPost = async (req: ExtendedRequest, res: Response) => {
     },
   });
 };
-
-// export const getPost = async (req, res) => {};
 
 export const editPost = async (req: ExtendedRequest, res: Response) => {
   const { slug } = req.params;
