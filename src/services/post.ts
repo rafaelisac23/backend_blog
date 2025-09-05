@@ -4,6 +4,54 @@ import { v4 } from "uuid";
 import { prisma } from "../libs/prisma";
 import { Prisma } from "../generated/prisma";
 
+export const getAllPublishedPosts = async (page: number) => {
+  let perPage = 5;
+  if (page <= 0) return [];
+
+  const posts = await prisma.post.findMany({
+    where: { status: "PUBLISHED" },
+    include: {
+      author: {
+        select: {
+          name: true,
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: perPage,
+    skip: (page - 1) * 5,
+  });
+
+  return posts;
+};
+
+export const getPostWithSameTags = async (slug: string) => {
+  const post = await prisma.post.findUnique({ where: { slug } });
+  if (!post) return [];
+
+  const tags = post.tags.split(",");
+
+  if (tags.length === 0) return [];
+
+  const posts = await prisma.post.findMany({
+    where: {
+      status: "PUBLISHED",
+      slug: { not: slug },
+      OR: tags.map((term) => ({
+        tags: { contains: term, mode: "insensitive" },
+      })),
+    },
+    include: { author: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 4,
+  });
+
+  return posts;
+};
+
 export const getAllPosts = async (page: number) => {
   let perPage = 5;
   if (page <= 0) return [];

@@ -12,8 +12,6 @@ import {
 } from "../services/post";
 import { getUserById } from "../services/user";
 import { coverToUrl } from "../utils/CoverToUrl";
-import { error } from "console";
-import { title } from "process";
 
 export const getPost = async (req: ExtendedRequest, res: Response) => {
   const { slug } = req.params;
